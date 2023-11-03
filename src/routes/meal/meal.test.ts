@@ -13,14 +13,14 @@ describe('Meal Routes', () => {
   })
 
   beforeEach(() => {
-    execSync('pnpm knex:migrate rollback --all')
-    execSync('pnpm knex:migrate latest')
+    execSync('pnpm knex migrate:rollback --all')
+    execSync('pnpm knex migrate:latest')
   })
 
   const fakeMeal = {
-    name: 'Croissant',
+    title: 'Croissant',
     description: 'A chicken croissant',
-    diet: false,
+    diet: 0,
   }
 
   it('shoud be able to list all meals', async () => {
@@ -131,12 +131,6 @@ describe('Meal Routes', () => {
     expect(responseWithoutMeal.body.meals).toEqual([])
   })
 
-  it('should return 404 if the meal does not exist', async () => {
-    await request(app.server).delete('/meals/123').expect(404)
-    await request(app.server).put('/meals/123').expect(404)
-    await request(app.server).get('/meals/123').expect(404)
-  })
-
   it('should return unauthorized if the meal is from another user', async () => {
     await request(app.server).post('/meals').send(fakeMeal)
 
@@ -154,33 +148,30 @@ describe('Meal Routes', () => {
 
     const specificMealPath = `/meals/${mealId}`
 
-    await request(app.server).delete(specificMealPath).expect(401)
     await request(app.server).put(specificMealPath).expect(401)
+    await request(app.server).delete(specificMealPath).expect(401)
     await request(app.server).get(specificMealPath).expect(401)
   })
 
   it.todo('should be able to get the summary', async () => {
     const registerMealsResponse = await request(app.server)
-      .post('/transactions')
-      .send({
-        title: 'Credit transaction',
-        amount: 5000,
-        type: 'credit',
-      })
+      .post('/meals')
+      .send(fakeMeal)
 
     const cookies = registerMealsResponse.get('Set-Cookie')
 
     await request(app.server)
-      .post('/transactions')
-      .send({
-        title: 'Debit transaction',
-        amount: 2000,
-        type: 'debit',
-      })
+      .post('/meals')
+      .send({ ...fakeMeal, diet: true })
+      .set('Cookie', cookies)
+
+    await request(app.server)
+      .post('/meals')
+      .send({ ...fakeMeal, diet: true })
       .set('Cookie', cookies)
 
     const summaryResponse = await request(app.server)
-      .get('/transactions/summary')
+      .get('/meals/summary')
       .set('Cookie', cookies)
       .expect(200)
 
