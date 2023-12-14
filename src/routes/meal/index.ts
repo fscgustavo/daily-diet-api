@@ -74,4 +74,18 @@ export async function mealRoutes(app: FastifyInstance) {
       return reply.status(204).send()
     },
   )
+
+  app.get('/summary', async (request) => {
+    const { sessionId } = request.cookies
+
+    const result = await knex.raw(`
+    SELECT
+      COUNT(*) AS total,
+      SUM(CASE WHEN diet = true THEN 1 ELSE 0 END) AS diet,
+      SUM(CASE WHEN diet = false THEN 1 ELSE 0 END) AS nonDiet
+    FROM meals WHERE session_id='${sessionId}';
+    `)
+
+    return { summary: result[0] }
+  })
 }

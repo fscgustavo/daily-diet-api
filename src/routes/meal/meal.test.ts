@@ -153,7 +153,7 @@ describe('Meal Routes', () => {
     await request(app.server).get(specificMealPath).expect(401)
   })
 
-  it.todo('should be able to get the summary', async () => {
+  it('should be able to get the summary', async () => {
     const registerMealsResponse = await request(app.server)
       .post('/meals')
       .send(fakeMeal)
@@ -176,7 +176,7 @@ describe('Meal Routes', () => {
       .expect(200)
 
     expect(summaryResponse.body.summary).toEqual(
-      expect.objectContaining({ amount: 3000 }),
+      expect.objectContaining({ total: 3, nonDiet: 1, diet: 2 }),
     )
   })
 })
